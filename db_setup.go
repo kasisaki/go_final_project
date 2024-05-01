@@ -13,7 +13,7 @@ func setupDb() {
 	path := filepath.Join("schema.sql")
 	dbName, exists := os.LookupEnv("TODO_DBFILE")
 	if !exists {
-		log.Println("DB name is not provided setting to default")
+		log.Println("DB name is not provided... Setting to default")
 		dbName = "scheduler.db"
 	}
 	dbFile := filepath.Join(dbName)
@@ -44,7 +44,6 @@ func setupDb() {
 
 		for _, request := range requests {
 			_, err := db.Exec(request)
-			// do whatever you need with result and error
 			if err != nil {
 				log.Fatalf("DATABASE setup completed with an error: %s\n", err)
 			}
