@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"errors"
 	"go_final_project/models"
 	"go_final_project/utils"
 )
@@ -46,4 +47,21 @@ func GetTasksFromDB(search string, limit int) ([]models.TaskDTO, error) {
 		tasks = append(tasks, task)
 	}
 	return tasks, nil
+}
+
+func GetTaskById(id string) (models.TaskDTO, error) {
+	var task models.TaskDTO
+	query := `SELECT id, title, date, comment, repeat FROM scheduler
+WHERE id = :id`
+	res, err := db.Query(query, sql.Named("id", id))
+	if err != nil {
+		return task, err
+	}
+	if !res.Next() {
+		return task, errors.New("Задача не найдена")
+	}
+	if err := res.Scan(&task.Id, &task.Title, &task.Date, &task.Comment, &task.Repeat); err != nil {
+		return task, err
+	}
+	return task, nil
 }
