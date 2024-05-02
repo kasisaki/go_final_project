@@ -1,21 +1,18 @@
-package main
+package services
 
 import (
 	"errors"
+	"go_final_project/constants"
 	"slices"
 	"strconv"
 	"strings"
 	"time"
 )
 
-const (
-	DateLayout = "20060102"
-)
-
 func NextDate(now time.Time, date string, repeat string) (newDate string, err error) {
 	parameterError := errors.New("wrong repeat parameter")
 	parameterSet := strings.Split(repeat, " ")
-	taskDate, err := time.Parse(DateLayout, date)
+	taskDate, err := time.Parse(constants.DateLayout, date)
 	if err != nil {
 		return "", err
 	}
@@ -42,7 +39,7 @@ func NextDate(now time.Time, date string, repeat string) (newDate string, err er
 		for taskDate.Before(now) || taskDate.Equal(now) {
 			taskDate = taskDate.AddDate(0, 0, delay)
 		}
-		return taskDate.Format(DateLayout), nil
+		return taskDate.Format(constants.DateLayout), nil
 	// this case will add a year to the date
 	case "y":
 		if lenP != 1 {
@@ -52,7 +49,7 @@ func NextDate(now time.Time, date string, repeat string) (newDate string, err er
 		for now.After(taskDate) || now.Equal(taskDate) {
 			taskDate = taskDate.AddDate(1, 0, 0)
 		}
-		return taskDate.Format(DateLayout), nil
+		return taskDate.Format(constants.DateLayout), nil
 	case "w":
 		if taskDate.Before(now) {
 			taskDate = now
@@ -82,7 +79,7 @@ func NextDate(now time.Time, date string, repeat string) (newDate string, err er
 		for _, day := range weekDays {
 			dates[nextWeeklyDate(taskDate, time.Weekday(day))] = true
 		}
-		return findEarliestDate(dates).Format(DateLayout), nil
+		return findEarliestDate(dates).Format(constants.DateLayout), nil
 
 	case "m":
 		if taskDate.Before(now) {
@@ -113,7 +110,7 @@ func NextDate(now time.Time, date string, repeat string) (newDate string, err er
 				}
 				dates[nextMonthlyDate(taskDate, 0, day, false)] = true
 			}
-			return findEarliestDate(dates).Format(DateLayout), nil
+			return findEarliestDate(dates).Format(constants.DateLayout), nil
 		} else if lenP == 3 {
 			// с указанием конкретного месяца
 			strMonth := strings.Split(parameterSet[2], ",")
@@ -143,7 +140,7 @@ func NextDate(now time.Time, date string, repeat string) (newDate string, err er
 					dates[nextMonthlyDate(taskDate, time.Month(month), day, true)] = true
 				}
 			}
-			return findEarliestDate(dates).Format(DateLayout), nil
+			return findEarliestDate(dates).Format(constants.DateLayout), nil
 		}
 		return "", parameterError
 	default:
@@ -188,7 +185,7 @@ func nextMonthlyDate(t time.Time, month time.Month, day int, monthSpecific bool)
 }
 
 func findEarliestDate(dates map[time.Time]bool) time.Time {
-	someDateInFuture, _ := time.Parse(DateLayout, "30000101")
+	someDateInFuture, _ := time.Parse(constants.DateLayout, "30000101")
 	for k, v := range dates {
 		if v {
 			if k.Before(someDateInFuture) {

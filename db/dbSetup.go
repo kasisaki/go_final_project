@@ -1,13 +1,17 @@
-package main
+package db
 
 import (
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
+	"go_final_project/constants"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
 )
+
+var db *sql.DB
+var err error
 
 func initializeDB(dbPath string, initScript string) (*sql.DB, error) {
 	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
@@ -18,7 +22,7 @@ func initializeDB(dbPath string, initScript string) (*sql.DB, error) {
 		}
 	}
 
-	db, err := sql.Open("sqlite3", dbPath)
+	db, err = sql.Open("sqlite3", dbPath)
 	if err != nil {
 		return nil, err
 	}
@@ -41,12 +45,12 @@ func initializeDB(dbPath string, initScript string) (*sql.DB, error) {
 	return db, nil
 }
 
-func setupDb() *sql.DB {
+func SetupDb() *sql.DB {
 	initScriptPath := filepath.Join("schema.sql")
 	dbName, exists := os.LookupEnv("DBFILE")
 	if !exists {
 		log.Println("DB name is not provided... Setting to default")
-		dbName = "scheduler.db"
+		dbName = constants.DefaultDbName
 	}
 
 	initScript, errLoad := os.ReadFile(initScriptPath)
