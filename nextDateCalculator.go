@@ -101,6 +101,9 @@ func NextDate(now time.Time, date string, repeat string) (newDate string, err er
 			dates := make(map[time.Time]bool)
 			for _, day := range days {
 				if day < 0 {
+					if day < -2 {
+						return "", parameterError
+					}
 					y, m, _ := taskDate.Date()
 					_, _, dayX := time.Date(y, m+1, day+1, 0, 0, 0, 0, taskDate.Location()).Date()
 					day = dayX

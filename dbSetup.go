@@ -9,44 +9,51 @@ import (
 	"strings"
 )
 
-func setupDb() {
-	path := filepath.Join("schema.sql")
-	dbName, exists := os.LookupEnv("TODO_DBFILE")
+func initializeDB(dbPath string, initScript string) (*sql.DB, error) {
+	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
+		log.Printf("Database file '%s' does not exist. Creating a new one.", dbPath)
+		_, err := os.Create(dbPath)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check the database connection
+	if err := db.Ping(); err != nil {
+		db.Close()
+		return nil, err
+	}
+
+	requests := strings.Split(initScript, ";\n")
+
+	for _, request := range requests {
+		_, err := db.Exec(request)
+		if err != nil {
+			log.Fatalf("DATABASE setup completed with an error: %s\n", err)
+		}
+	}
+
+	return db, nil
+}
+
+func setupDb() *sql.DB {
+	initScriptPath := filepath.Join("schema.sql")
+	dbName, exists := os.LookupEnv("DBFILE")
 	if !exists {
 		log.Println("DB name is not provided... Setting to default")
 		dbName = "scheduler.db"
 	}
-	dbFile := filepath.Join(dbName)
-	_, err := os.Stat(dbFile)
 
-	var install bool
-	if err != nil {
-		install = true
+	initScript, errLoad := os.ReadFile(initScriptPath)
+	if errLoad != nil {
+		log.Fatal("DB setup script was not loaded properly")
 	}
-	if install {
-		file, errLoad := os.ReadFile(path)
-		if errLoad != nil {
-			log.Fatal("DB setup script was not loaded properly")
-		}
 
-		db, err := sql.Open("sqlite3", dbFile)
-		if err != nil {
-			log.Println("Error connecting to DB")
-		}
-		defer func(db *sql.DB) {
-			err := db.Close()
-			if err != nil {
-				log.Println("Error closing DB session")
-			}
-		}(db)
-
-		requests := strings.Split(string(file), ";\n")
-
-		for _, request := range requests {
-			_, err := db.Exec(request)
-			if err != nil {
-				log.Fatalf("DATABASE setup completed with an error: %s\n", err)
-			}
-		}
-	}
+	db, _ := initializeDB(dbName, string(initScript))
+	return db
 }
