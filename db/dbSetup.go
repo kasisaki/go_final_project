@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-var db *sql.DB
+var DB *sql.DB
 var err error
 
 func initializeDB(dbPath string, initScript string) (*sql.DB, error) {
@@ -22,27 +22,21 @@ func initializeDB(dbPath string, initScript string) (*sql.DB, error) {
 		}
 	}
 
-	db, err = sql.Open("sqlite3", dbPath)
+	DB, err = sql.Open("sqlite3", dbPath)
 	if err != nil {
-		return nil, err
-	}
-
-	// Check the database connection
-	if err := db.Ping(); err != nil {
-		db.Close()
 		return nil, err
 	}
 
 	requests := strings.Split(initScript, ";\n")
 
 	for _, request := range requests {
-		_, err := db.Exec(request)
+		_, err := DB.Exec(request)
 		if err != nil {
 			log.Fatalf("DATABASE setup completed with an error: %s\n", err)
 		}
 	}
 
-	return db, nil
+	return DB, nil
 }
 
 func SetupDb() *sql.DB {

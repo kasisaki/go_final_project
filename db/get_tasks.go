@@ -34,7 +34,7 @@ func GetTasksFromDB(search string, limit int) ([]models.TaskDTO, error) {
 	LIMIT :limit
 	`
 	}
-	res, err := db.Query(getTasks,
+	res, err := DB.Query(getTasks,
 		sql.Named("search", search), sql.Named("limit", limit), sql.Named("date", date))
 	if err != nil {
 		return nil, err
@@ -49,19 +49,34 @@ func GetTasksFromDB(search string, limit int) ([]models.TaskDTO, error) {
 	return tasks, nil
 }
 
-func GetTaskById(id string) (models.TaskDTO, error) {
+func GetTaskById(id int) (models.TaskDTO, error) {
 	var task models.TaskDTO
-	query := `SELECT id, title, date, comment, repeat FROM scheduler
-WHERE id = :id`
-	res, err := db.Query(query, sql.Named("id", id))
+
+	tx, err := DB.Begin()
 	if err != nil {
 		return task, err
 	}
+	defer tx.Rollback()
+
+	query := `SELECT id, title, date, comment, repeat FROM scheduler WHERE id = ?`
+	res, err := tx.Query(query, id)
+	if err != nil {
+		return task, err
+	}
+	defer res.Close()
+
 	if !res.Next() {
 		return task, errors.New("Задача не найдена")
 	}
+
 	if err := res.Scan(&task.Id, &task.Title, &task.Date, &task.Comment, &task.Repeat); err != nil {
 		return task, err
 	}
+
+	err = tx.Commit()
+	if err != nil {
+		return task, err
+	}
+
 	return task, nil
 }

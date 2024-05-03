@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"errors"
 	"go_final_project/constants"
 	"go_final_project/db"
@@ -24,23 +23,14 @@ func HandleGetTasks(w http.ResponseWriter, req *http.Request) {
 		respMap["tasks"] = tasks
 
 		// Преобразуем список задач в JSON
-		responseJSON, err := json.Marshal(respMap)
-		if err != nil {
-			utils.HandleError(w, http.StatusInternalServerError, err)
-			return
-		}
-
-		// Отправляем JSON клиенту
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(responseJSON)
+		utils.WriteNormalResponse(w, respMap)
+		return
 	}
 }
 
 func HandleGetTaskById(w http.ResponseWriter, req *http.Request) {
 	if req.Method == http.MethodGet {
-		id := req.URL.Query().Get("id")
-		_, err := strconv.Atoi(id)
+		id, err := strconv.Atoi(req.URL.Query().Get("id"))
 		if err != nil {
 			utils.HandleError(w, http.StatusBadRequest, errors.New("Не указан идентификатор"))
 			return
@@ -48,12 +38,10 @@ func HandleGetTaskById(w http.ResponseWriter, req *http.Request) {
 		task, err := db.GetTaskById(id)
 		if err != nil {
 			utils.HandleError(w, 404, err)
+			return
 		}
 
-		responseJSON, err := json.Marshal(task)
-		// Отправляем JSON клиенту
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(responseJSON)
+		utils.WriteNormalResponse(w, task)
+		return
 	}
 }

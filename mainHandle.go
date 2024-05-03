@@ -24,9 +24,12 @@ func main() {
 
 	r.Handle("/*", http.StripPrefix("/", http.FileServer(http.Dir(webDir))))
 	r.Get("/api/nextdate", handlers.HandleNextDate)
-	r.Post("/api/task", handlers.HandleTaskPost)
+	r.Post("/api/task", handlers.HandlePostTask)
 	r.Get("/api/tasks", handlers.HandleGetTasks)
 	r.Get("/api/task", handlers.HandleGetTaskById)
+	r.Put("/api/task", handlers.HandlePutTask)
+	r.Post("/api/task/done", handlers.HandleTaskDone)
+	r.Delete("/api/task", handlers.HandleDeleteTask)
 
 	err := http.ListenAndServe(":"+port, r)
 	if err != nil {

@@ -10,13 +10,14 @@ import (
 	"go_final_project/services"
 	"go_final_project/utils"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
 
-func HandlePostTask(w http.ResponseWriter, req *http.Request) {
-	// Проверяем POST-запрос или нет
-	if req.Method == http.MethodPost {
+func HandlePutTask(w http.ResponseWriter, req *http.Request) {
+	// Проверяем PUT-запрос или нет
+	if req.Method == http.MethodPut {
 		var task models.TaskDTO
 		var buf bytes.Buffer
 
@@ -62,19 +63,21 @@ func HandlePostTask(w http.ResponseWriter, req *http.Request) {
 			}
 		}
 
-		id, err := db.InsertTask(task)
+		_, err = strconv.Atoi(task.Id)
 		if err != nil {
-			// Если произошла ошибка при вставке задачи
+			utils.HandleError(w, http.StatusBadRequest, errors.New("Идентификатор должен быть числом"))
+			return
+		}
+
+		err = db.PutTask(task)
+		if err != nil {
+			// Если произошла ошибка при обновлении задачи
 			utils.HandleError(w, http.StatusInternalServerError, err)
 			return
 		}
 
-		// Если задача успешно создана
-		response := struct {
-			ID int64 `json:"id"`
-		}{ID: id}
-
-		utils.WriteNormalResponse(w, response)
+		// Если задача успешно обновлена
+		utils.WriteNormalResponse(w, "")
 		return
 	}
 }
