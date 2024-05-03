@@ -2,18 +2,19 @@ package handlers
 
 import (
 	"errors"
-	"go_final_project/constants"
 	"go_final_project/db"
 	"go_final_project/models"
 	"net/http"
 	"strconv"
 )
 
+const TasksNumberLimit = 50
+
 func HandleGetTasks(w http.ResponseWriter, req *http.Request) {
 	// Проверяем GET-запрос или нет
 	if req.Method == http.MethodGet {
 		search := req.URL.Query().Get("search")
-		tasks, err := db.GetTasksFromDB(search, constants.TasksNumberLimit) // Получаем список задач из базы данных лим
+		tasks, err := db.GetTasksFromDB(search, TasksNumberLimit) // Получаем список задач из базы данных лим
 		if err != nil {
 			HandleError(w, http.StatusInternalServerError, err)
 			return

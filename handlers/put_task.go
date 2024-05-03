@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"go_final_project/constants"
 	"go_final_project/db"
 	"go_final_project/models"
 	"go_final_project/services"
@@ -41,9 +40,9 @@ func HandlePutTask(w http.ResponseWriter, req *http.Request) {
 
 		now := time.Now().Truncate(24 * time.Hour)
 		if task.Date == "" {
-			task.Date = now.Format(constants.DateLayout)
+			task.Date = now.Format(dateLayout)
 		}
-		taskDate, err := time.Parse(constants.DateLayout, task.Date)
+		taskDate, err := time.Parse(dateLayout, task.Date)
 		if err != nil {
 			HandleError(w, http.StatusBadRequest, err)
 			return
@@ -51,7 +50,7 @@ func HandlePutTask(w http.ResponseWriter, req *http.Request) {
 
 		if taskDate.Before(now) {
 			if task.Repeat == "" {
-				task.Date = now.Format(constants.DateLayout)
+				task.Date = now.Format(dateLayout)
 			} else {
 				nextDate, err := services.NextDate(now, task.Date, task.Repeat)
 				if err != nil {

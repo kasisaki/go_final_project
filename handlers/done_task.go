@@ -47,3 +47,27 @@ func HandleTaskDone(w http.ResponseWriter, req *http.Request) {
 	HandleNormalResponse(w, "")
 	return
 }
+
+func HandleDeleteTask(w http.ResponseWriter, req *http.Request) {
+	id, err := strconv.Atoi(req.URL.Query().Get("id"))
+	if err != nil {
+		HandleError(w, http.StatusBadRequest, errors.New("Неверный идентификатор"))
+		return
+	}
+
+	// Данная проверка проводится, чтобы вернуть ошибку, при попытке удаления несуществующей задачи
+	_, err = db.GetTaskById(id)
+	if HandleGetError(w, err) {
+		return
+	}
+
+	err = db.DeleteById(id)
+	if err != nil {
+		HandleError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	// Если задача успешно удалена
+	HandleNormalResponse(w, "")
+	return
+}

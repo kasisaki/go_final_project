@@ -2,7 +2,6 @@ package db
 
 import (
 	"errors"
-	"fmt"
 	"go_final_project/models"
 	"strconv"
 )
@@ -25,10 +24,8 @@ func PutTask(task models.TaskDTO) error {
 	}
 	defer func() {
 		if err != nil {
-			fmt.Println("Trying to roll")
 			err := tx.Rollback()
 			if err != nil {
-				fmt.Println("Error rolling")
 				return
 			}
 			return
@@ -51,7 +48,6 @@ func PutTask(task models.TaskDTO) error {
 		idInt,
 	)
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 	return nil
