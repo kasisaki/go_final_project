@@ -3,12 +3,13 @@ package db
 import (
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
-	"go_final_project/constants"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
 )
+
+const DefaultDbName = "scheduler.db"
 
 var DB *sql.DB
 var err error
@@ -44,7 +45,7 @@ func SetupDb() *sql.DB {
 	dbName, exists := os.LookupEnv("DBFILE")
 	if !exists {
 		log.Println("DB name is not provided... Setting to default")
-		dbName = constants.DefaultDbName
+		dbName = DefaultDbName
 	}
 
 	initScript, errLoad := os.ReadFile(initScriptPath)

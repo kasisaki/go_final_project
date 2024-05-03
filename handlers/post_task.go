@@ -8,16 +8,14 @@ import (
 	"go_final_project/db"
 	"go_final_project/models"
 	"go_final_project/services"
-	"go_final_project/utils"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 )
 
-func HandlePutTask(w http.ResponseWriter, req *http.Request) {
-	// Проверяем PUT-запрос или нет
-	if req.Method == http.MethodPut {
+func HandlePostTask(w http.ResponseWriter, req *http.Request) {
+	// Проверяем POST-запрос или нет
+	if req.Method == http.MethodPost {
 		var task models.TaskDTO
 		var buf bytes.Buffer
 
@@ -36,7 +34,7 @@ func HandlePutTask(w http.ResponseWriter, req *http.Request) {
 
 		if strings.TrimSpace(task.Title) == "" {
 			// Если title пустой, возвращаем ошибку
-			utils.HandleError(w, http.StatusBadRequest, errors.New("Не указан заголовок задачи"))
+			HandleError(w, http.StatusBadRequest, errors.New("Не указан заголовок задачи"))
 			return
 		}
 
@@ -46,7 +44,7 @@ func HandlePutTask(w http.ResponseWriter, req *http.Request) {
 		}
 		taskDate, err := time.Parse(constants.DateLayout, task.Date)
 		if err != nil {
-			utils.HandleError(w, http.StatusBadRequest, err)
+			HandleError(w, http.StatusBadRequest, err)
 			return
 		}
 
@@ -56,28 +54,26 @@ func HandlePutTask(w http.ResponseWriter, req *http.Request) {
 			} else {
 				nextDate, err := services.NextDate(now, task.Date, task.Repeat)
 				if err != nil {
-					utils.HandleError(w, http.StatusBadRequest, err)
+					HandleError(w, http.StatusBadRequest, err)
 					return
 				}
 				task.Date = nextDate
 			}
 		}
 
-		_, err = strconv.Atoi(task.Id)
+		id, err := db.InsertTask(task)
 		if err != nil {
-			utils.HandleError(w, http.StatusBadRequest, errors.New("Идентификатор должен быть числом"))
+			// Если произошла ошибка при вставке задачи
+			HandleError(w, http.StatusInternalServerError, err)
 			return
 		}
 
-		err = db.PutTask(task)
-		if err != nil {
-			// Если произошла ошибка при обновлении задачи
-			utils.HandleError(w, http.StatusInternalServerError, err)
-			return
-		}
+		// Если задача успешно создана
+		response := struct {
+			ID int64 `json:"id"`
+		}{ID: id}
 
-		// Если задача успешно обновлена
-		utils.WriteNormalResponse(w, "")
+		HandleNormalResponse(w, response)
 		return
 	}
 }

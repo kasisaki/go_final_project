@@ -8,15 +8,15 @@ import (
 	"go_final_project/db"
 	"go_final_project/models"
 	"go_final_project/services"
-	"go_final_project/utils"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
 
-func HandlePostTask(w http.ResponseWriter, req *http.Request) {
-	// Проверяем POST-запрос или нет
-	if req.Method == http.MethodPost {
+func HandlePutTask(w http.ResponseWriter, req *http.Request) {
+	// Проверяем PUT-запрос или нет
+	if req.Method == http.MethodPut {
 		var task models.TaskDTO
 		var buf bytes.Buffer
 
@@ -35,7 +35,7 @@ func HandlePostTask(w http.ResponseWriter, req *http.Request) {
 
 		if strings.TrimSpace(task.Title) == "" {
 			// Если title пустой, возвращаем ошибку
-			utils.HandleError(w, http.StatusBadRequest, errors.New("Не указан заголовок задачи"))
+			HandleError(w, http.StatusBadRequest, errors.New("Не указан заголовок задачи"))
 			return
 		}
 
@@ -45,7 +45,7 @@ func HandlePostTask(w http.ResponseWriter, req *http.Request) {
 		}
 		taskDate, err := time.Parse(constants.DateLayout, task.Date)
 		if err != nil {
-			utils.HandleError(w, http.StatusBadRequest, err)
+			HandleError(w, http.StatusBadRequest, err)
 			return
 		}
 
@@ -55,26 +55,28 @@ func HandlePostTask(w http.ResponseWriter, req *http.Request) {
 			} else {
 				nextDate, err := services.NextDate(now, task.Date, task.Repeat)
 				if err != nil {
-					utils.HandleError(w, http.StatusBadRequest, err)
+					HandleError(w, http.StatusBadRequest, err)
 					return
 				}
 				task.Date = nextDate
 			}
 		}
 
-		id, err := db.InsertTask(task)
+		_, err = strconv.Atoi(task.Id)
 		if err != nil {
-			// Если произошла ошибка при вставке задачи
-			utils.HandleError(w, http.StatusInternalServerError, err)
+			HandleError(w, http.StatusBadRequest, errors.New("Идентификатор должен быть числом"))
 			return
 		}
 
-		// Если задача успешно создана
-		response := struct {
-			ID int64 `json:"id"`
-		}{ID: id}
+		err = db.PutTask(task)
+		if err != nil {
+			// Если произошла ошибка при обновлении задачи
+			HandleError(w, http.StatusInternalServerError, err)
+			return
+		}
 
-		utils.WriteNormalResponse(w, response)
+		// Если задача успешно обновлена
+		HandleNormalResponse(w, "")
 		return
 	}
 }
